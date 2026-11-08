@@ -35,7 +35,8 @@ jobs:
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          CLEAN=$(printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n\t')
+          # Keep only the long base64 run, in case a label or spaces were pasted with it.
+          CLEAN=$(printf '%s' "$KEYSTORE_B64" | tr -d '\r\n\t' | grep -oE '[A-Za-z0-9+/]{200,}={0,2}' | head -1)
           if [ -n "$CLEAN" ] && printf '%s' "$CLEAN" | base64 -d > "$RUNNER_TEMP/station.keystore" 2>/dev/null; then
             echo "STATION_KEYSTORE=$RUNNER_TEMP/station.keystore" >> "$GITHUB_ENV"
             echo "Using the station signing key."
