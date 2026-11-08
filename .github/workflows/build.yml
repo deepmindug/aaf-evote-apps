@@ -6,6 +6,7 @@ on:
   push:
     branches: [main]
     tags: ['v*']
+    paths-ignore: ['README.md']
   workflow_dispatch:
 
 permissions:
@@ -96,15 +97,27 @@ jobs:
 
   release:
     name: GitHub Release
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Every build of main updates the release for the version in package.json (e.g. v1.0.0).
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     needs: [android, windows]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
+      - name: Version
+        id: v
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with:
           path: files
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: AAF eVote Station ${{ steps.v.outputs.tag }}
+          body: |
+            **Android** (Android 8 and newer, including 14–17): download the `.apk`, open it on the phone or tablet, allow installing from this source.
+            **Windows** (10 and 11, 64-bit): download the `Setup .exe` and run it. If Windows SmartScreen appears, click *More info → Run anyway*.
+            Set up the app with your school's AAF eVote address and a teacher account.
           files: files/*
-          generate_release_notes: true
+          make_latest: true
