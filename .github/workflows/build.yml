@@ -35,11 +35,14 @@ jobs:
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$KEYSTORE_B64" ]; then
-            # Spaces or line breaks picked up while copying are removed first.
-            printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/station.keystore"
+          CLEAN=$(printf '%s' "$KEYSTORE_B64" | tr -d ' \r\n\t')
+          if [ -n "$CLEAN" ] && printf '%s' "$CLEAN" | base64 -d > "$RUNNER_TEMP/station.keystore" 2>/dev/null; then
             echo "STATION_KEYSTORE=$RUNNER_TEMP/station.keystore" >> "$GITHUB_ENV"
             echo "Using the station signing key."
+          elif [ -n "$CLEAN" ]; then
+            BAD=$(printf '%s' "$CLEAN" | tr -d 'A-Za-z0-9+/=' | wc -c)
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not valid: ${#CLEAN} characters (expected about 3576, starting with MII), ${BAD} characters that do not belong. Paste only the long line of letters, nothing else."
+            exit 1
           else
             echo "::warning::No ANDROID_KEYSTORE_BASE64 secret. Building a debug-signed APK; new builds will not install over old ones. See README → Signing."
           fi
