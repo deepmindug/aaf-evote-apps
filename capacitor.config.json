@@ -1,0 +1,12 @@
+{
+  "appId": "org.aafevote.station",
+  "appName": "AAF eVote Station",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#eef1f5"
+  },
+  "plugins": {
+    "CapacitorHttp": { "enabled": true }
+  }
+}

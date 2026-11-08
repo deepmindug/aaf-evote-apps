@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src *; frame-src 'self' blob: about:;">
+<meta name="theme-color" content="#1c75bc">
+<title>AAF eVote Station</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="bar">
+  <img class="bar__logo" src="logo.svg" alt="AAF">
+  <div class="bar__title">
+    <b>AAF eVote</b>
+    <span id="barSchool">Voting station</span>
+  </div>
+  <div class="bar__right">
+    <span id="netPill" class="pill pill--off" title="Connection"><i></i><span>Offline</span></span>
+    <span id="queuePill" class="pill" hidden title="Votes waiting to be sent"></span>
+    <button id="teacherBtn" class="btn btn--ghost btn--sm" hidden>Teacher</button>
+  </div>
+</header>
+
+<main id="app" class="main" aria-live="polite"></main>
+
+<dialog id="dlg" class="dlg"></dialog>
+
+<div id="printArea" class="print-area" aria-hidden="true"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
