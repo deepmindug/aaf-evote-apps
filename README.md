@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Android** | Android 14, 15, 16 and 17 (minimum API 34, built against API 36) |
+| **Android** | Android 8 and newer, including 14, 15, 16 and 17 (minimum API 26, built against API 36) |
 | **Windows** | Windows 10 and 11 (64-bit) |
 | **Server** | AAF eVote website with the `api/station` upgrade |
 
