@@ -1,5 +1,5 @@
 ext {
-    minSdkVersion = 34   // Android 14 and newer (14, 15, 16, 17)
+    minSdkVersion = 26   // Android 8 and newer; tested target Android 14–17
     compileSdkVersion = 36
     targetSdkVersion = 36
     androidxActivityVersion = '1.11.0'
