@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.0.1';
+  var VERSION = '1.0.2';
   var DEFAULT_SERVER = 'https://dade.aaf-evote.org';
   var SYNC_EVERY_MS = 20000;
   var BALLOT_IDLE_MS = 3 * 60 * 1000;
@@ -437,18 +437,27 @@
           '<b>' + h(c.name) + '</b>' + (c.class ? '<span class="muted">' + h(c.class) + '</span>' : '') + '</button>';
       }).join('') + '</div>' +
       '<div class="ballot__nav">' +
-      (B.i > 0 ? '<button class="btn btn--ghost" id="back">‹ Back</button>' : '<span></span>') +
-      '<button class="btn ' + (chosen ? 'btn--green' : 'btn--ghost') + ' btn--lg" id="next">' + (chosen ? (B.i + 1 < total ? 'Next ›' : 'Check my choices ›') : 'Skip this post ›') + '</button>' +
+      (B.fromReview ? '<button class="btn btn--ghost" id="back">‹ Back to my choices</button>' : (B.i > 0 ? '<button class="btn btn--ghost" id="back">‹ Back</button>' : '<span></span>')) +
+      (chosen ? '<button class="btn btn--ghost" id="clear">Clear</button>' : '') +
+      '<button class="btn ' + (chosen ? 'btn--green' : 'btn--ghost') + ' btn--lg" id="next">' + (chosen ? (B.fromReview || B.i + 1 >= total ? 'Check my choices ›' : 'Next ›') : 'Skip this post ›') + '</button>' +
       '</div></section>';
+    var busyTap = false;
+    // One tap chooses the person, shows the tick, then moves on by itself.
     $$('.cand').forEach(function (el) {
       el.onclick = function () {
-        var id = +el.dataset.id; B.choices[post.id] = B.choices[post.id] === id ? undefined : id;
-        if (B.choices[post.id] === undefined) delete B.choices[post.id];
-        renderPost();
+        if (busyTap) return; busyTap = true;
+        B.choices[post.id] = +el.dataset.id;
+        $$('.cand').forEach(function (x) { var on = x === el; x.classList.toggle('is-on', on); x.setAttribute('aria-checked', on); });
+        setTimeout(goOn, 420);
       };
     });
-    $('#next').onclick = function () { if (B.i + 1 < total) { B.i++; renderPost(); } else renderReview(); };
-    if ($('#back')) $('#back').onclick = function () { B.i--; renderPost(); };
+    function goOn() {
+      if (B.fromReview) return renderReview(post.id);
+      if (B.i + 1 < total) { B.i++; renderPost(); } else renderReview();
+    }
+    $('#next').onclick = goOn;
+    if ($('#clear')) $('#clear').onclick = function () { delete B.choices[post.id]; renderPost(); };
+    if ($('#back')) $('#back').onclick = function () { if (B.fromReview) return renderReview(post.id); B.i--; renderPost(); };
     $('#quit').onclick = quitBallot;
     window.scrollTo(0, 0);
   }
@@ -457,8 +466,8 @@
     confirmBox('Stop voting?', 'Your choices will not be saved. You can start again with your slip.', 'Stop', true).then(function (ok) { if (ok) { B = null; clearTimeout(ballotIdle); renderHome(); } });
   }
 
-  function renderReview() {
-    currentView = 'ballot'; touchBallot();
+  function renderReview(focusPostId) {
+    currentView = 'ballot'; touchBallot(); B.fromReview = false;
     var n = Object.keys(B.choices).length;
     app.innerHTML =
       '<section class="ballot"><div class="ballot__top"><div><span class="eyebrow">Almost done</span><h2>Check your choices</h2>' +
@@ -466,18 +475,19 @@
       '<button class="btn btn--ghost btn--sm" id="quit">Cancel</button></div>' +
       '<div class="review">' + S.pkg.posts.map(function (p, i) {
         var c = p.candidates.find(function (x) { return x.id === B.choices[p.id]; });
-        return '<div class="review__row"><span class="review__post">' + h(p.name) + '</span>' +
+        return '<div class="review__row' + (p.id === focusPostId ? ' is-flash' : '') + '" data-post="' + p.id + '"><span class="review__post">' + h(p.name) + '</span>' +
           (c ? '<span class="review__who">' + (c.photo ? '<img src="' + h(c.photo) + '" alt="">' : '<span class="cand__init cand__init--sm">' + h(initials(c.name)) + '</span>') + '<b>' + h(c.name) + '</b></span>' : '<span class="tag">Skipped</span>') +
           '<button class="btn btn--ghost btn--sm" data-go="' + i + '">Change</button></div>';
       }).join('') + '</div>' +
       (n ? '' : '<div class="alert alert--bad">Please choose at least one person before casting your vote.</div>') +
       '<div class="ballot__nav"><button class="btn btn--ghost" id="back">‹ Back</button>' +
       '<button class="btn btn--green btn--lg" id="cast"' + (n ? '' : ' disabled') + '>Cast my vote ✓</button></div></section>';
-    $$('[data-go]').forEach(function (b) { b.onclick = function () { B.i = +b.dataset.go; renderPost(); }; });
+    $$('[data-go]').forEach(function (b) { b.onclick = function () { B.i = +b.dataset.go; B.fromReview = true; renderPost(); }; });
     $('#back').onclick = function () { B.i = S.pkg.posts.length - 1; renderPost(); };
     $('#quit').onclick = quitBallot;
     $('#cast').onclick = function () { castVote(this); };
-    window.scrollTo(0, 0);
+    var focus = focusPostId && $('.review__row[data-post="' + focusPostId + '"]');
+    if (focus) focus.scrollIntoView({ block: 'center' }); else window.scrollTo(0, 0);
   }
 
   function castVote(btn) {
