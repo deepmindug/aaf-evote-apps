@@ -1,7 +1,7 @@
 {
   "name": "aaf-evote-station",
   "productName": "AAF eVote Station",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Offline voting station for AAF eVote school elections (Windows and Android).",
   "author": "Aye-Africa Foundation",
   "license": "UNLICENSED",

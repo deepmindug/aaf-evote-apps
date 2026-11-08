@@ -8,7 +8,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.0.1';
   var DEFAULT_SERVER = 'https://dade.aaf-evote.org';
   var SYNC_EVERY_MS = 20000;
   var BALLOT_IDLE_MS = 3 * 60 * 1000;
@@ -124,7 +124,7 @@
     var headers = { 'Accept': 'application/json' };
     if (opts.body) headers['Content-Type'] = 'application/json';
     var token = opts.token || (S.cfg && S.cfg.token);
-    if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (token) { headers['Authorization'] = 'Bearer ' + token; headers['X-Station-Token'] = token; }
     return fetch(server + '/api/station/' + path, {
       method: opts.method || 'GET', headers: headers, signal: ctl ? ctl.signal : undefined,
       body: opts.body ? JSON.stringify(opts.body) : undefined, cache: 'no-store'
