@@ -8,8 +8,8 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.0.2';
-  var DEFAULT_SERVER = 'https://dade.aaf-evote.org';
+  var VERSION = '1.0.3';
+  var DEFAULT_SERVER = 'https://aaf-evote.org';
   var SYNC_EVERY_MS = 20000;
   var BALLOT_IDLE_MS = 3 * 60 * 1000;
   var TEACHER_IDLE_MS = 5 * 60 * 1000;
@@ -270,22 +270,35 @@
   function renderSetup(err) {
     currentView = 'setup';
     var server = (S.cfg && S.cfg.server) || DEFAULT_SERVER;
+    var own = server.replace(/\/+$/, '') !== DEFAULT_SERVER;
     app.innerHTML =
       '<section class="card card--narrow">' +
       '<div class="card__head"><img src="logo.svg" alt="" class="hero-logo"><h1>Set up this voting station</h1>' +
       '<p class="muted">A teacher signs in once while there is internet. The election is then saved on this device so pupils can vote with no internet. Votes are sent to the school server when the internet comes back.</p></div>' +
       (err ? '<div class="alert alert--bad">' + h(err) + '</div>' : '') +
       '<form id="setupForm" class="form" autocomplete="off">' +
-      '<label>Server address<input name="server" type="url" required value="' + h(server) + '" inputmode="url"></label>' +
+      '<fieldset class="where"><legend>Where does your school run AAF eVote?</legend>' +
+      '<label class="where__opt"><input type="radio" name="where" value="cloud"' + (own ? '' : ' checked') + '><span><b>AAF eVote online</b><small>aaf-evote.org — most schools</small></span></label>' +
+      '<label class="where__opt"><input type="radio" name="where" value="own"' + (own ? ' checked' : '') + '><span><b>Our school\'s own server</b><small>On-premises licence: on the school network or the school\'s website</small></span></label>' +
+      '</fieldset>' +
+      '<label id="ownWrap"' + (own ? '' : ' hidden') + '>Your server\'s address<input name="server" type="text" autocapitalize="none" spellcheck="false" value="' + h(own ? server : '') + '" inputmode="url" placeholder="http://192.168.1.10 or https://evote.myschool.ac.ug">' +
+      '<small class="hint">The same address the school opens in a browser. Ask whoever installed it, or see INSTALL-GUIDE in the installation package.' + (/android/i.test(platform()) ? ' On Android the address must start with https://.' : '') + '</small></label>' +
       '<label>Teacher email or username<input name="login" required autocomplete="username"></label>' +
       '<label>Password<input name="password" type="password" required autocomplete="current-password"></label>' +
       '<p class="hint">Use the same email and password as on the website. Your password also locks the teacher area of this app.</p>' +
       '<button class="btn btn--blue btn--lg" type="submit">Sign in and download</button>' +
       '</form><p class="tiny muted center">AAF eVote Station ' + VERSION + ' · ' + h(platform()) + '</p></section>';
+    $$('input[name=where]').forEach(function (r) {
+      r.onchange = function () { var o = $('input[name=where]:checked').value === 'own'; $('#ownWrap').hidden = !o; if (o) $('#setupForm').server.focus(); };
+    });
     $('#setupForm').addEventListener('submit', function (ev) {
       ev.preventDefault();
       var f = ev.target, btn = $('button[type=submit]', f);
-      var srv = f.server.value.trim().replace(/\/+$/, ''), login = f.login.value.trim(), pw = f.password.value;
+      var ownServer = $('input[name=where]:checked').value === 'own';
+      var srv = ownServer ? f.server.value.trim().replace(/\/+$/, '') : DEFAULT_SERVER, login = f.login.value.trim(), pw = f.password.value;
+      if (ownServer && !/^https?:\/\/[^\s\/]+/i.test(srv)) {
+        if (/^[^\s\/]+(\/|$)/.test(srv)) { srv = 'http://' + srv; } else { renderSetup('Type your server\'s address, for example http://192.168.1.10'); return; }
+      }
       busy(btn, true, 'Signing in…');
       kv.get('device').then(function (dev) {
         dev = dev || uuid(); kv.set('device', dev);
@@ -665,6 +678,7 @@
     el.innerHTML = '<div class="card"><h3>This device</h3><table class="tbl tbl--kv">' +
       '<tr><th>School</th><td>' + h(S.pkg.school.name) + '</td></tr>' +
       '<tr><th>Server</th><td class="mono">' + h(S.cfg.server) + '</td></tr>' +
+      (S.pkg.plan && S.pkg.plan.label ? '<tr><th>Plan</th><td><span class="tag ' + ({ active: 'tag--green', onprem: 'tag--green', trial: 'tag--blue', grace: 'tag--warn', expired: 'tag--red' }[S.pkg.plan.state] || '') + '">' + h(S.pkg.plan.label) + '</span> <span class="muted small">' + h(S.pkg.plan.detail || '') + '</span></td></tr>' : '') +
       '<tr><th>Set up by</th><td>' + h(S.cfg.user.name) + '</td></tr>' +
       '<tr><th>Election downloaded</th><td>' + h(S.pkg.election.name) + ' · ' + S.pkg.pupils.length + ' pupils · ' + S.pkg.posts.length + ' posts</td></tr>' +
       '<tr><th>Clock</th><td>' + h(new Date(now()).toLocaleString()) + ' <span class="muted small">(server time; this device is ' + Math.round(Math.abs(S.offset) / 1000) + 's ' + (S.offset >= 0 ? 'behind' : 'ahead') + ')</span></td></tr>' +

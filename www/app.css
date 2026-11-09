@@ -193,3 +193,17 @@ input:disabled { opacity: .55; }
   .slip__grid span { font-size: 9pt; color: #555; } .slip__grid b { font-family: Consolas, monospace; font-size: 15pt; letter-spacing: 1.5pt; }
   .slip__foot { margin-top: 2mm; font-size: 8pt; color: #555; }
 }
+
+/* 1.0.3: choose AAF eVote online or the school's own server (on-premises licence) */
+.where { border: 0; padding: 0; margin: 0 0 6px; display: grid; gap: 8px; }
+.where legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.where__opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 2px solid var(--line, #e3e8ef); border-radius: 14px; cursor: pointer; margin: 0; }
+.where__opt:has(input:checked) { border-color: var(--blue, #1c75bc); background: rgba(28, 117, 188, .06); }
+.where__opt input { margin-top: 4px; width: auto; }
+.where__opt b { display: block; }
+.where__opt small { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
+#ownWrap small.hint { display: block; margin-top: 4px; font-weight: 400; }
+.tag--blue { background: #e8f1fb; color: #1c5f9b; }
+.form label.where__opt { flex-direction: row; align-items: center; gap: 12px; }
+.form label.where__opt input { flex: none; width: 20px; height: 20px; margin: 0; }
+.form label.where__opt span { flex: 1; }

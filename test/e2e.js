@@ -18,6 +18,7 @@ async function setup(browser, name) {
   page.on('pageerror', e => console.log('PAGE ERROR', name, e.message));
   page.on('console', m => { if (m.type() === 'error') console.log('console', name, m.text()); });
   await page.goto('http://127.0.0.1:8100/');
+  await page.check('input[name=where][value=own]');
   await page.fill('input[name=server]', 'http://127.0.0.1:8000');
   await page.fill('input[name=login]', 'grace.test@dade.example');
   await page.fill('input[name=password]', 'Teacher2026x');
